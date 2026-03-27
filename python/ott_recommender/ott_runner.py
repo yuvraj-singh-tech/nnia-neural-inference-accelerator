@@ -57,7 +57,29 @@ ARTIFACTS_DIR = PROJECT_ROOT / "artifacts"
 DATASETS_DIR = PROJECT_ROOT / "datasets"
 
 VIVADO_BAT = Path(r"D:\VITIS_2022.1\Vivado\2022.1\bin\vivado.bat")
-RUN_SIM_TCL = SCRIPTS_DIR / "run_vivado_sim.tcl"
+
+
+def resolve_run_sim_tcl() -> Path:
+    """
+    Resolve the Vivado TCL script used by the OTT runner.
+
+    Preference order:
+    1) run_nnia_sim.tcl   -> aligned with the current NNIA tiled flow
+    2) run_vivado_sim.tcl -> backward-compatible fallback
+    """
+    preferred = SCRIPTS_DIR / "run_nnia_sim.tcl"
+    fallback = SCRIPTS_DIR / "run_vivado_sim.tcl"
+
+    if preferred.exists():
+        return preferred
+    if fallback.exists():
+        return fallback
+
+    # Return preferred path so validation prints the intended missing file.
+    return preferred
+
+
+RUN_SIM_TCL = resolve_run_sim_tcl()
 
 OTT_LOG_FILE = LOGS_DIR / "ott_runner.log"
 VIVADO_L1_LOG_FILE = LOGS_DIR / "vivado_layer1_batch.log"
@@ -112,11 +134,6 @@ def build_python_env() -> dict[str, str]:
 def build_vivado_env() -> dict[str, str]:
     """
     Use a simpler environment for Vivado batch runs.
-
-    Reason
-    ------
-    Vivado on Windows is usually more stable when launched through cmd /c
-    with a clean working directory and without depending on Python module env.
     """
     env = os.environ.copy()
     return env
@@ -167,7 +184,9 @@ def run_command(
         save_stdout_to.parent.mkdir(parents=True, exist_ok=True)
         combined = stdout
         if stderr.strip():
-            combined += ("\n" if combined and not combined.endswith("\n") else "") + "[STDERR]\n" + stderr
+            combined += (
+                "\n" if combined and not combined.endswith("\n") else ""
+            ) + "[STDERR]\n" + stderr
         save_stdout_to.write_text(combined, encoding="utf-8")
 
     if process.returncode != 0:
@@ -183,7 +202,11 @@ def run_command(
 # Vivado execution
 # =============================================================================
 def latest_hs_err_log() -> Path | None:
-    candidates = sorted(PROJECT_ROOT.glob("hs_err_pid*.log"), key=lambda p: p.stat().st_mtime, reverse=True)
+    candidates = sorted(
+        PROJECT_ROOT.glob("hs_err_pid*.log"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
     return candidates[0] if candidates else None
 
 
@@ -191,8 +214,6 @@ def run_vivado_batch(step_title: str, save_log_to: Path) -> str:
     """
     Run Vivado batch safely on Windows.
 
-    Key fix
-    -------
     Launch vivado.bat through cmd.exe /c instead of calling the .bat directly.
     """
     print_step(step_title)
@@ -227,7 +248,9 @@ def run_vivado_batch(step_title: str, save_log_to: Path) -> str:
     stderr = process.stderr or ""
     combined = stdout
     if stderr.strip():
-        combined += ("\n" if combined and not combined.endswith("\n") else "") + "[STDERR]\n" + stderr
+        combined += (
+            "\n" if combined and not combined.endswith("\n") else ""
+        ) + "[STDERR]\n" + stderr
 
     if stdout.strip():
         print(stdout, end="" if stdout.endswith("\n") else "\n")
@@ -264,6 +287,26 @@ def extract_metric(text: str, key: str) -> str | None:
         if line.startswith(key + "="):
             return line.split("=", 1)[1].strip()
     return None
+
+
+def extract_best_throughput(text: str) -> tuple[str | None, str | None]:
+    """
+    Extract throughput values from Vivado/TB host-safe output.
+
+    Current TCL emits:
+    - HOST_PEAK_THROUGHPUT_MMACS
+    - HOST_EFFECTIVE_THROUGHPUT_MMACS
+
+    Older flows may emit:
+    - HOST_THROUGHPUT_MMACS
+    """
+    effective = extract_metric(text, "HOST_EFFECTIVE_THROUGHPUT_MMACS")
+    peak = extract_metric(text, "HOST_PEAK_THROUGHPUT_MMACS")
+
+    if effective is None:
+        effective = extract_metric(text, "HOST_THROUGHPUT_MMACS")
+
+    return effective, peak
 
 
 def parse_compare_status(text: str) -> str:
@@ -367,7 +410,7 @@ def main() -> None:
     )
     l1_latency_cycles = extract_metric(vivado_l1_output, "HOST_LATENCY_CYCLES")
     l1_latency_time_us = extract_metric(vivado_l1_output, "HOST_LATENCY_TIME_US")
-    l1_throughput_mmacs = extract_metric(vivado_l1_output, "HOST_THROUGHPUT_MMACS")
+    l1_effective_throughput_mmacs, l1_peak_throughput_mmacs = extract_best_throughput(vivado_l1_output)
 
     compare_l1_output = run_command(
         [
@@ -398,7 +441,7 @@ def main() -> None:
     )
     l2_latency_cycles = extract_metric(vivado_l2_output, "HOST_LATENCY_CYCLES")
     l2_latency_time_us = extract_metric(vivado_l2_output, "HOST_LATENCY_TIME_US")
-    l2_throughput_mmacs = extract_metric(vivado_l2_output, "HOST_THROUGHPUT_MMACS")
+    l2_effective_throughput_mmacs, l2_peak_throughput_mmacs = extract_best_throughput(vivado_l2_output)
 
     compare_l2_output = run_command(
         [
@@ -425,8 +468,10 @@ def main() -> None:
         print(f"  Latency (cycles)      : {l1_latency_cycles}")
     if l1_latency_time_us is not None:
         print(f"  Latency (time)        : {l1_latency_time_us} us")
-    if l1_throughput_mmacs is not None:
-        print(f"  Throughput            : {l1_throughput_mmacs} MMAC/s")
+    if l1_effective_throughput_mmacs is not None:
+        print(f"  Effective throughput  : {l1_effective_throughput_mmacs} MMAC/s")
+    if l1_peak_throughput_mmacs is not None:
+        print(f"  Peak throughput       : {l1_peak_throughput_mmacs} MMAC/s")
     print(f"  Comparison status     : {l1_status}")
 
     print("\nLayer-2 hardware pass")
@@ -434,8 +479,10 @@ def main() -> None:
         print(f"  Latency (cycles)      : {l2_latency_cycles}")
     if l2_latency_time_us is not None:
         print(f"  Latency (time)        : {l2_latency_time_us} us")
-    if l2_throughput_mmacs is not None:
-        print(f"  Throughput            : {l2_throughput_mmacs} MMAC/s")
+    if l2_effective_throughput_mmacs is not None:
+        print(f"  Effective throughput  : {l2_effective_throughput_mmacs} MMAC/s")
+    if l2_peak_throughput_mmacs is not None:
+        print(f"  Peak throughput       : {l2_peak_throughput_mmacs} MMAC/s")
     print(f"  Comparison status     : {l2_status}")
 
     overall_pass = (l1_status == "PASS") and (l2_status == "PASS")
