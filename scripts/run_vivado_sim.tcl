@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# Module Name : run_nnia_sim.tcl
+# Module Name : run_vivado_sim.tcl
 # Author      : Yuvraj Singh
 # Project     : Neural Network Inference Accelerator (NNIA)
 #
