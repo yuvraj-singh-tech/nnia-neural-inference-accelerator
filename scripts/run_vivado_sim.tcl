@@ -8,15 +8,16 @@
 # Vivado batch simulation script for end-to-end NNIA verification.
 #
 # Automates the complete flow including RTL compilation, testbench execution,
-# memory validation, and output generation, ensuring a reproducible and
-# structured simulation pipeline.
+# memory validation, output generation, and performance extraction to provide
+# a reproducible and structured simulation pipeline.
 #
 # Key Points
 # ----------
 # - Verifies presence of RTL, testbench, and memory files
 # - Performs clean build (removes previous simulation artifacts)
 # - Compiles RTL and testbench, followed by elaboration and simulation
-# - Extracts performance metrics (latency, throughput) from simulation logs
+# - Extracts latency and throughput metrics from TB-reported performance counters
+# - Separates peak theoretical throughput from effective measured throughput
 # - Validates generated output file for correctness
 #
 # Role in Flow
@@ -24,7 +25,7 @@
 # - Acts as the execution backbone of NNIA verification
 # - Bridges Python-generated memory files with RTL simulation
 # - Produces both functional output and performance metrics
-# --------------------------------------------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 puts ""
 puts "======================================================================"
@@ -42,6 +43,18 @@ cd $project_root
 puts ""
 puts "INFO  : Project root resolved successfully."
 puts "INFO  : Project root : $project_root"
+
+# -----------------------------------------------------------------------------
+# Locked NNIA configuration
+# -----------------------------------------------------------------------------
+set M_TOTAL 4.0
+set K_TOTAL 16.0
+set N_TOTAL 8.0
+set ROWS    4.0
+set COLS    4.0
+
+# Testbench clock
+set clk_period_ns 10.0
 
 # -----------------------------------------------------------------------------
 # Paths
@@ -229,7 +242,6 @@ if {[catch {exec xsim $snapshot_name -runall} msg]} {
 
 puts "PASS  : Simulation completed successfully."
 
-# Print simulation output
 puts ""
 puts "----------------------------------------------------------------------"
 puts "SIMULATION CONSOLE OUTPUT"
@@ -237,13 +249,31 @@ puts "----------------------------------------------------------------------"
 puts $msg
 
 # -----------------------------------------------------------------------------
-# Extract performance counter
+# Extract performance counters from simulation console
 # -----------------------------------------------------------------------------
-set perf_run_cycles ""
+set perf_total_cycles ""
+set perf_run_cycles   ""
+set perf_run_count    ""
+set perf_tile_writes  ""
+set perf_psum_saves   ""
 
 foreach line [split $msg "\n"] {
-    if {[regexp {^PERF_RUN_CYCLES=([0-9]+)} $line -> value]} {
+    set line [string trim $line]
+
+    if {[regexp {^PERF_TOTAL_CYCLES=([0-9]+)$} $line -> value]} {
+        set perf_total_cycles $value
+    }
+    if {[regexp {^PERF_RUN_CYCLES=([0-9]+)$} $line -> value]} {
         set perf_run_cycles $value
+    }
+    if {[regexp {^PERF_RUN_COUNT=([0-9]+)$} $line -> value]} {
+        set perf_run_count $value
+    }
+    if {[regexp {^PERF_TILE_WRITES=([0-9]+)$} $line -> value]} {
+        set perf_tile_writes $value
+    }
+    if {[regexp {^PERF_PSUM_SAVES=([0-9]+)$} $line -> value]} {
+        set perf_psum_saves $value
     }
 }
 
@@ -252,33 +282,66 @@ foreach line [split $msg "\n"] {
 # -----------------------------------------------------------------------------
 if {$perf_run_cycles ne ""} {
 
-    set clk_period_ns 10.0
-    set clk_freq_mhz 100.0
+    set latency_cycles [expr {double($perf_run_cycles)}]
+    set clk_freq_hz    [expr {1.0e9 / $clk_period_ns}]
+    set clk_freq_mhz   [expr {$clk_freq_hz / 1.0e6}]
 
-    set latency_cycles $perf_run_cycles
-    set latency_ns [expr {$latency_cycles * $clk_period_ns}]
-    set latency_us [expr {$latency_ns / 1000.0}]
-    set throughput_mmacs [expr {(512.0 / $latency_cycles) * $clk_freq_mhz}]
+    set latency_ns     [expr {$latency_cycles * $clk_period_ns}]
+    set latency_us     [expr {$latency_ns / 1000.0}]
+
+    # Actual dense MAC work for one full NNIA inference
+    set total_macs [expr {$M_TOTAL * $K_TOTAL * $N_TOTAL}]
+
+    # Peak hardware capability from PE array size
+    set peak_macs_per_cycle [expr {$ROWS * $COLS}]
+    set peak_throughput_mmacs [expr {$peak_macs_per_cycle * $clk_freq_mhz}]
+
+    # Effective throughput from measured run cycles
+    set effective_throughput_mmacs [expr {($total_macs / $latency_cycles) * $clk_freq_mhz}]
+
+    # Utilization as ratio of effective to peak throughput
+    if {$peak_throughput_mmacs > 0.0} {
+        set utilization_percent [expr {($effective_throughput_mmacs / $peak_throughput_mmacs) * 100.0}]
+    } else {
+        set utilization_percent 0.0
+    }
 
     puts ""
     puts "======================================================================"
     puts "                          NNIA INFERENCE RESULTS                      "
     puts "======================================================================"
+    puts [format "%-32s : %.0f"        "Inference latency (cycles)"   $latency_cycles]
+    puts [format "%-32s : %.2f us"     "Inference latency"            $latency_us]
+    puts [format "%-32s : %.0f"        "Total MACs per inference"     $total_macs]
+    puts [format "%-32s : %.0f"        "Peak MACs per cycle"          $peak_macs_per_cycle]
+    puts [format "%-32s : %.2f MMAC/s" "Peak throughput @100MHz"      $peak_throughput_mmacs]
+    puts [format "%-32s : %.2f MMAC/s" "Effective throughput"         $effective_throughput_mmacs]
 
-    puts [format "%-28s : %s"      "Inference latency (cycles)" $latency_cycles]
-    puts [format "%-28s : %.2f us" "Inference latency @100MHz"  $latency_us]
-    puts [format "%-28s : %.2f MMAC/s" "Throughput"              $throughput_mmacs]
+    if {$perf_total_cycles ne ""} {
+        puts [format "%-32s : %s" "Perf total cycles" $perf_total_cycles]
+    }
+    if {$perf_run_count ne ""} {
+        puts [format "%-32s : %s" "Perf run count" $perf_run_count]
+    }
+    if {$perf_tile_writes ne ""} {
+        puts [format "%-32s : %s" "Perf tile writes" $perf_tile_writes]
+    }
+    if {$perf_psum_saves ne ""} {
+        puts [format "%-32s : %s" "Perf psum saves" $perf_psum_saves]
+    }
+    puts "======================================================================"
 
     # --- HOST SAFE OUTPUT ---
-    puts "HOST_LATENCY_CYCLES=$latency_cycles"
+    puts [format "HOST_LATENCY_CYCLES=%.0f" $latency_cycles]
     puts [format "HOST_LATENCY_TIME_US=%.2f" $latency_us]
-    puts [format "HOST_THROUGHPUT_MMACS=%.2f" $throughput_mmacs]
-
-    puts "======================================================================"
+    puts [format "HOST_TOTAL_MACS=%.0f" $total_macs]
+    puts [format "HOST_PEAK_MACS_PER_CYCLE=%.0f" $peak_macs_per_cycle]
+    puts [format "HOST_PEAK_THROUGHPUT_MMACS=%.2f" $peak_throughput_mmacs]
+    puts [format "HOST_EFFECTIVE_THROUGHPUT_MMACS=%.2f" $effective_throughput_mmacs]
 
 } else {
     puts ""
-    puts "WARN  : Performance counters not detected."
+    puts "WARN  : PERF_RUN_CYCLES not detected from simulation output."
 }
 
 # -----------------------------------------------------------------------------
@@ -308,7 +371,7 @@ puts "INFO  : Output file : $rtl_out_file"
 
 puts ""
 puts "======================================================================"
-puts "                         NNIA SIMULATION PASS                          "
+puts "                         NNIA SIMULATION PASS                         "
 puts "======================================================================"
 
 exit 0
