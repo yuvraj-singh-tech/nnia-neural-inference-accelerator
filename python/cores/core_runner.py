@@ -214,9 +214,7 @@ def parse_compare_status(text: str) -> str:
 # Validation helpers
 # =============================================================================
 def validate_required_paths() -> None:
-    """
-    Validate critical external paths before starting the run.
-    """
+    """Validate critical external paths before starting the run."""
     missing: list[str] = []
 
     required_paths = [
@@ -239,25 +237,23 @@ def validate_required_paths() -> None:
 # Main orchestration flow
 # =============================================================================
 def main() -> None:
-    """
-    Execute the complete NNIA core verification flow.
-    """
+    """Execute the complete NNIA core verification flow."""
     os.chdir(PROJECT_ROOT)
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     CORE_LOG_FILE.write_text("", encoding="utf-8")
 
     print_banner("NNIA CORE VERIFICATION RUNNER")
-    print(f"Project root       : {PROJECT_ROOT}")
-    print(f"Python root        : {PYTHON_ROOT}")
-    print(f"Scripts directory  : {SCRIPTS_DIR}")
-    print(f"Memory directory   : {MEM_DIR}")
-    print(f"Logs directory     : {LOGS_DIR}")
-    print(f"Vivado executable  : {VIVADO_BAT}")
-    print(f"TCL script         : {RUN_SIM_TCL}")
-    print(f"Golden output file : {GOLD_MEM}")
-    print(f"RTL output file    : {RTL_MEM}")
-    print(f"Core log file      : {CORE_LOG_FILE}")
-    print(f"Vivado log file    : {VIVADO_LOG_FILE}")
+    print(f"Project root                 : {PROJECT_ROOT}")
+    print(f"Python root                  : {PYTHON_ROOT}")
+    print(f"Scripts directory            : {SCRIPTS_DIR}")
+    print(f"Memory directory             : {MEM_DIR}")
+    print(f"Logs directory               : {LOGS_DIR}")
+    print(f"Vivado executable            : {VIVADO_BAT}")
+    print(f"TCL script                   : {RUN_SIM_TCL}")
+    print(f"Golden output file           : {GOLD_MEM}")
+    print(f"RTL output file              : {RTL_MEM}")
+    print(f"Core log file                : {CORE_LOG_FILE}")
+    print(f"Vivado log file              : {VIVADO_LOG_FILE}")
 
     validate_required_paths()
 
@@ -295,9 +291,15 @@ def main() -> None:
     )
 
     sim_output = VIVADO_LOG_FILE.read_text(encoding="utf-8", errors="replace")
+
     latency_cycles = extract_metric(sim_output, "HOST_LATENCY_CYCLES")
     latency_time_us = extract_metric(sim_output, "HOST_LATENCY_TIME_US")
-    throughput_mmacs = extract_metric(sim_output, "HOST_THROUGHPUT_MMACS")
+    total_macs = extract_metric(sim_output, "HOST_TOTAL_MACS")
+    peak_macs_per_cycle = extract_metric(sim_output, "HOST_PEAK_MACS_PER_CYCLE")
+    peak_throughput_mmacs = extract_metric(sim_output, "HOST_PEAK_THROUGHPUT_MMACS")
+    effective_throughput_mmacs = extract_metric(
+        sim_output, "HOST_EFFECTIVE_THROUGHPUT_MMACS"
+    )
 
     # -------------------------------------------------------------------------
     # STEP 5: Explicit core output comparison
@@ -325,21 +327,27 @@ def main() -> None:
     print_banner("NNIA CORE RUN SUMMARY")
 
     if latency_cycles is not None:
-        print(f"Inference latency (cycles) : {latency_cycles}")
+        print(f"Inference latency (cycles)   : {latency_cycles}")
     if latency_time_us is not None:
-        print(f"Inference latency (time)   : {latency_time_us} us")
-    if throughput_mmacs is not None:
-        print(f"Throughput                 : {throughput_mmacs} MMAC/s")
+        print(f"Inference latency (time)     : {latency_time_us} us")
+    if total_macs is not None:
+        print(f"Total MACs per inference     : {total_macs}")
+    if peak_macs_per_cycle is not None:
+        print(f"Peak MACs per cycle          : {peak_macs_per_cycle}")
+    if peak_throughput_mmacs is not None:
+        print(f"Peak throughput              : {peak_throughput_mmacs} MMAC/s")
+    if effective_throughput_mmacs is not None:
+        print(f"Effective throughput         : {effective_throughput_mmacs} MMAC/s")
 
-    print(f"Final comparison status    : {final_status}")
+    print(f"Final comparison status      : {final_status}")
 
     if final_status == "PASS":
-        print("Run result                 : Core verification completed successfully.")
+        print("Run result                   : Core verification completed successfully.")
     elif final_status == "FAIL":
-        print("Run result                 : Flow completed, but output comparison failed.")
+        print("Run result                   : Flow completed, but output comparison failed.")
         sys.exit(1)
     else:
-        print("Run result                 : Flow completed, but final status was unclear.")
+        print("Run result                   : Flow completed, but final status was unclear.")
         sys.exit(1)
 
 
