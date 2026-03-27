@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 /*
 ------------------------------------------------------------------------------
 Module Name : weight_buffer
@@ -10,16 +8,16 @@ Description
 -----------
 Weight storage and streaming stage for NNIA tiled execution.
 
-Stores the full weight matrix and streams one tile-aligned weight vector
-into the PE array, applying column-wise skew to ensure correct temporal
-alignment with activation flow.
+This module stores the full weight matrix, selects the required tile window,
+and streams one weight vector per cycle into the PE array. A column-wise skew
+pipeline is applied to ensure correct temporal alignment with activation flow.
 
 Key Points
 ----------
-- Streams weights per K-step into PE array top edge
-- Applies column-wise skew for correct PE alignment
-- Maintains internal tile configuration and stream control
-- tile_done indicates completion of one K-tile stream
+- Streams weights per K-step into PE array
+- Applies column-wise skew for correct alignment
+- Maintains tile configuration and streaming control
+- tile_done indicates completion of one tile stream
 - cfg_error flags invalid tile configuration
 
 Role in Pipeline
@@ -29,6 +27,8 @@ Role in Pipeline
 - Supports tiled accumulation across K dimension
 ------------------------------------------------------------------------------
 */
+
+`timescale 1ns / 1ps
 
 module weight_buffer #(
     parameter integer K_TOTAL    = 16,
@@ -57,127 +57,100 @@ module weight_buffer #(
     output reg                                            cfg_error
 );
 
-    initial begin
-        if (K_TOTAL != 16) begin
-            $error("weight_buffer: Locked NNIA version expects K_TOTAL=16.");
-            $finish;
-        end
-
-        if (N_TOTAL != 8) begin
-            $error("weight_buffer: Locked NNIA version expects N_TOTAL=8.");
-            $finish;
-        end
-
-        if (TILE_K != 4) begin
-            $error("weight_buffer: Locked NNIA version expects TILE_K=4.");
-            $finish;
-        end
-
-        if (TILE_N != 4) begin
-            $error("weight_buffer: Locked NNIA version expects TILE_N=4.");
-            $finish;
-        end
-    end
-
     // ------------------------------------------------------------------------
-    // Full weight storage
+    // Storage
     // ------------------------------------------------------------------------
     reg signed [(K_TOTAL*N_TOTAL*DATA_WIDTH)-1:0] weight_store_flat;
 
-    // Latched tile bases
+    // Active tile
     reg [$clog2(K_TOTAL)-1:0] tile_k_base_reg;
     reg [$clog2(N_TOTAL)-1:0] tile_n_base_reg;
 
-    // Config validity
-    wire tile_k_base_ok;
-    wire tile_n_base_ok;
+    //  Pending tile 
+    reg [$clog2(K_TOTAL)-1:0] pending_tile_k_base;
+    reg [$clog2(N_TOTAL)-1:0] pending_tile_n_base;
+    reg                       pending_valid;
+
+    // ------------------------------------------------------------------------
+    // Config check
+    // ------------------------------------------------------------------------
     wire start_cfg_ok;
 
-    assign tile_k_base_ok = ((tile_k_base + TILE_K) <= K_TOTAL) &&
-                            (tile_k_base[1:0] == 2'b00);
-
-    assign tile_n_base_ok = ((tile_n_base + TILE_N) <= N_TOTAL) &&
-                            (tile_n_base[1:0] == 2'b00);
-
-    assign start_cfg_ok   = tile_k_base_ok && tile_n_base_ok;
+    assign start_cfg_ok =
+        ((tile_k_base + TILE_K) <= K_TOTAL) &&
+        ((tile_n_base + TILE_N) <= N_TOTAL) &&
+        (tile_k_base[1:0] == 2'b00) &&
+        (tile_n_base[1:0] == 2'b00);
 
     // ------------------------------------------------------------------------
-    // Per-column injected data before skew
+    // Injection
     // ------------------------------------------------------------------------
-    reg  signed [DATA_WIDTH-1:0] inject_data [0:TILE_N-1];
-    reg                          inject_valid[0:TILE_N-1];
+    reg signed [DATA_WIDTH-1:0] inject_data  [0:TILE_N-1];
+    reg                         inject_valid[0:TILE_N-1];
 
-    // Column skew pipelines:
-    // column c uses stage[c] as its output
-    reg signed [DATA_WIDTH-1:0] wt_pipe_data [0:TILE_N-1][0:TILE_N-1];
-    reg                         wt_pipe_valid[0:TILE_N-1][0:TILE_N-1];
+    reg signed [DATA_WIDTH-1:0] wt_pipe_data  [0:TILE_N-1][0:TILE_N-1];
+    reg                         wt_pipe_valid [0:TILE_N-1][0:TILE_N-1];
 
     integer c, s;
     integer flat_index;
 
-    // ------------------------------------------------------------------------
-    // Combinational read of current tile element to inject into stage0
-    // ------------------------------------------------------------------------
     always @(*) begin
         for (c = 0; c < TILE_N; c = c + 1) begin
-            inject_data[c]  = {DATA_WIDTH{1'b0}};
-            inject_valid[c] = 1'b0;
+            inject_data[c]  = 0;
+            inject_valid[c] = 0;
 
             if (stream_active) begin
                 flat_index = ((tile_k_base_reg + stream_step) * N_TOTAL) +
                              (tile_n_base_reg + c);
 
-                inject_data[c]  = weight_store_flat[(flat_index*DATA_WIDTH) +: DATA_WIDTH];
+                inject_data[c]  = weight_store_flat[(flat_index*DATA_WIDTH)+:DATA_WIDTH];
                 inject_valid[c] = 1'b1;
             end
         end
     end
 
-    // ------------------------------------------------------------------------
-    // Drive top-edge outputs from skew pipeline taps
-    // column c takes stage c
-    // ------------------------------------------------------------------------
     always @(*) begin
-        col_weight_in       = {(TILE_N*DATA_WIDTH){1'b0}};
-        col_weight_valid_in = {TILE_N{1'b0}};
+        col_weight_in       = 0;
+        col_weight_valid_in = 0;
 
         for (c = 0; c < TILE_N; c = c + 1) begin
-            col_weight_in[(c*DATA_WIDTH) +: DATA_WIDTH] = wt_pipe_data[c][c];
-            col_weight_valid_in[c]                      = wt_pipe_valid[c][c];
+            col_weight_in[(c*DATA_WIDTH)+:DATA_WIDTH] = wt_pipe_data[c][c];
+            col_weight_valid_in[c]                    = wt_pipe_valid[c][c];
         end
     end
 
     // ------------------------------------------------------------------------
-    // Sequential control + skew pipeline shift
-    // Pipeline shifts every cycle so skewed data can flush during controller
-    // drain cycles after the last injected stream step.
+    // Main logic
     // ------------------------------------------------------------------------
     always @(posedge clk) begin
         if (rst) begin
-            weight_store_flat <= {(K_TOTAL*N_TOTAL*DATA_WIDTH){1'b0}};
-            tile_k_base_reg   <= {($clog2(K_TOTAL)){1'b0}};
-            tile_n_base_reg   <= {($clog2(N_TOTAL)){1'b0}};
-            stream_active     <= 1'b0;
-            stream_step       <= {($clog2(TILE_K)){1'b0}};
-            tile_done         <= 1'b0;
-            cfg_error         <= 1'b0;
+            weight_store_flat <= 0;
+            tile_k_base_reg   <= 0;
+            tile_n_base_reg   <= 0;
 
-            for (c = 0; c < TILE_N; c = c + 1) begin
+            pending_tile_k_base <= 0;
+            pending_tile_n_base <= 0;
+            pending_valid       <= 0;
+
+            stream_active <= 0;
+            stream_step   <= 0;
+            tile_done     <= 0;
+            cfg_error     <= 0;
+
+            for (c = 0; c < TILE_N; c = c + 1)
                 for (s = 0; s < TILE_N; s = s + 1) begin
-                    wt_pipe_data[c][s]  <= {DATA_WIDTH{1'b0}};
-                    wt_pipe_valid[c][s] <= 1'b0;
+                    wt_pipe_data[c][s]  <= 0;
+                    wt_pipe_valid[c][s] <= 0;
                 end
-            end
         end
         else begin
-            tile_done <= 1'b0;
-            cfg_error <= 1'b0;
+            tile_done <= 0;
+            cfg_error <= 0;
 
-            if (load_en) begin
+            if (load_en)
                 weight_store_flat <= weight_flat;
-            end
 
-            // Shift skew pipelines every cycle
+            // shift pipeline
             for (c = 0; c < TILE_N; c = c + 1) begin
                 for (s = TILE_N-1; s > 0; s = s - 1) begin
                     wt_pipe_data[c][s]  <= wt_pipe_data[c][s-1];
@@ -188,28 +161,48 @@ module weight_buffer #(
                 wt_pipe_valid[c][0] <= inject_valid[c];
             end
 
-            // Start has priority over advance
+            // 🔥 START / QUEUE LOGIC
             if (start_tile) begin
                 if (start_cfg_ok) begin
-                    tile_k_base_reg <= tile_k_base;
-                    tile_n_base_reg <= tile_n_base;
-                    stream_active   <= 1'b1;
-                    stream_step     <= {($clog2(TILE_K)){1'b0}};
+                    if (!stream_active) begin
+                        // start immediately
+                        tile_k_base_reg <= tile_k_base;
+                        tile_n_base_reg <= tile_n_base;
+                        stream_active   <= 1;
+                        stream_step     <= 0;
+                    end
+                    else begin
+                        // queue next tile
+                        pending_tile_k_base <= tile_k_base;
+                        pending_tile_n_base <= tile_n_base;
+                        pending_valid       <= 1;
+                    end
                 end
                 else begin
-                    stream_active   <= 1'b0;
-                    stream_step     <= {($clog2(TILE_K)){1'b0}};
-                    cfg_error       <= 1'b1;
+                    cfg_error <= 1;
                 end
             end
+
+            // advance
             else if (stream_active && advance) begin
                 if (stream_step == TILE_K-1) begin
-                    stream_active <= 1'b0;
-                    stream_step   <= {($clog2(TILE_K)){1'b0}};
-                    tile_done     <= 1'b1;
+                    tile_done <= 1;
+
+                    if (pending_valid) begin
+                        // 🔥 instant switch (NO GAP)
+                        tile_k_base_reg <= pending_tile_k_base;
+                        tile_n_base_reg <= pending_tile_n_base;
+                        stream_step     <= 0;
+                        pending_valid   <= 0;
+                        stream_active   <= 1;
+                    end
+                    else begin
+                        stream_active <= 0;
+                        stream_step   <= 0;
+                    end
                 end
                 else begin
-                    stream_step <= stream_step + 1'b1;
+                    stream_step <= stream_step + 1;
                 end
             end
         end
