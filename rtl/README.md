@@ -30,7 +30,7 @@ These together form a structured and repeatable inference pipeline.
 
 ---
 
-## ⚡ <i>Why Hybrid Architecture?</i>
+## ⚡<i>Why Hybrid Architecture?</i>
 
 NNIA is termed **hybrid** because it combines:
 
