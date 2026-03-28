@@ -31,6 +31,10 @@ The architecture integrates dedicated input, weight, partial-sum (PSUM), and out
   <img src="https://github.com/user-attachments/assets/1a97ac26-f121-4100-8d21-2f3a24ae9e41" alt="NNIA Architecture" width="75%">
 </p>
 
+<p align="center">
+  🔗 <a href="rtl/README.md"><b>Detailed RTL architecture and execution flow</b></a>
+</p>
+
 ---
 
 ## ⚙️ <i>Key Design Features</i>
