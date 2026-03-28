@@ -208,7 +208,12 @@ Python → Golden Model → `.mem` → RTL → Compare → PASS
 
 ---
 
-<div align="center">
+## ⚙️ Implementation Context
+
+- Synthesized on Artix-7 FPGA (Vivado 2022.1) with a 100 MHz timing constraint  
+- Achieved positive slack of +3.7 ns, indicating timing closure with headroom (~150+ MHz estimated)
+  
+---
 
 ### ✨ Hybrid systolic compute with controlled dataflow — enabling structured, scalable neural inference in hardware
 
