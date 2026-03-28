@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎬 OTT AI Inference Pipeline on NNIA  
+# ⚡ OTT AI Inference Pipeline on NNIA  
 ### <i>From data to hardware to recommendation — one unified execution flow</i>
 
 <br>
