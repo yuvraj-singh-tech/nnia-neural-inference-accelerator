@@ -1,154 +1,150 @@
-<h1 align="center"><b>⚙️ NNIA RTL Design</b></h1>
+<div align="center">
 
-<h3 align="center"><i>Hybrid Tiled Systolic Architecture for Structured Neural Network Inference</i></h3>
+# ⚙️ NNIA RTL Architecture  
+### <i>Hybrid Tiled Systolic Design for Structured Neural Network Inference</i>
 
-<p align="center"><i>Parallel Compute • Controlled Dataflow • Tile-Based Execution • Deterministic Verification</i></p>
+<br>
 
----
-
-## 🧠 <i>RTL Overview</i>
-
-The RTL implementation of NNIA realizes a structured hardware pipeline for neural network inference using fixed-point arithmetic.
-
-The design integrates compute, buffering, and control into a coordinated execution system, where data movement and computation are tightly aligned. Rather than relying on a single architectural style, NNIA combines multiple execution mechanisms to achieve both efficiency and controllability.
-
----
-
-## 🏗️ <i>Architecture Overview</i>
-
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/1a97ac26-f121-4100-8d21-2f3a24ae9e41" width="77%">
+<p>
+  A hardware implementation of NNIA that combines <b>systolic computation</b>,
+  <b>explicit buffering</b>, and <b>tile-based control</b> to execute
+  fixed-point neural inference in a structured and deterministic manner.
 </p>
 
-The architecture is organized around three tightly coupled components:
+<br>
+
+<img src="https://github.com/user-attachments/assets/1a97ac26-f121-4100-8d21-2f3a24ae9e41" width="80%">
+
+</div>
+
+---
+
+## ⚡ What This Design Achieves
+
+This RTL design forms the **core compute engine of NNIA**.
+
+It enables:
+- ⚙️ structured parallel computation  
+- 🔢 fixed-point neural inference  
+- 🧩 controlled data movement  
+- 🔄 repeatable tile-based execution  
+
+---
+
+## 🧠 Architecture Overview
+
+The design is built around three tightly integrated components:
 
 - **Systolic compute fabric (PE array)**  
 - **Explicit buffering stages**  
 - **Tile-based execution control**
 
-These together form a structured and repeatable inference pipeline.
+Together, they create a **coordinated inference pipeline** where data and compute are aligned.
 
 ---
 
-## ⚡<i>Why Hybrid Architecture?</i>
+## ⚡ Why Hybrid Architecture
 
-NNIA is termed **hybrid** because it combines:
+NNIA combines two key ideas:
 
-- **Systolic array-based computation**
-- **Explicit buffer-controlled data movement**
-
----
-
-### 🧠 Systolic Compute Layer
-
-Computation is performed inside  
-👉 <a href="pe_array_4x4.v"><code>pe_array_4x4.v</code></a>  
-
-- Data propagates across the PE array in a structured manner  
-- Each PE performs localized MAC operations  
-- Partial sums accumulate across propagation steps  
-- Execution is driven by data alignment rather than centralized control  
-
-This enables:
-- efficient parallel computation  
-- structured propagation of results  
-- reuse of intermediate data  
+- **Data-driven computation (systolic array)**  
+- **Control-driven execution (buffers + tiles)**  
 
 ---
 
-### 🗂️ Buffer-Controlled Data Movement
+### 🧠 Systolic Compute Fabric
 
-Data is explicitly staged before entering compute:
+👉 <a href="pe_array_4x4.v"><code>pe_array_4x4.v</code></a>
 
-- <a href="input_buffer.v"><code>input_buffer.v</code></a> → activation scheduling  
-- <a href="weight_buffer.v"><code>weight_buffer.v</code></a> → weight scheduling  
-- <a href="psum_buffer.v"><code>psum_buffer.v</code></a> → accumulation persistence  
+- activations flow across rows  
+- weights flow across columns  
+- MAC operations occur on alignment  
+- partial sums accumulate locally  
+
+This provides:
+- parallel execution  
+- structured propagation  
+- efficient data reuse  
+
+---
+
+### 🗂️ Buffer-Controlled Dataflow
+
+- <a href="input_buffer.v"><code>input_buffer.v</code></a> → activation staging  
+- <a href="weight_buffer.v"><code>weight_buffer.v</code></a> → weight staging  
+- <a href="psum_buffer.v"><code>psum_buffer.v</code></a> → accumulation storage  
 - <a href="output_buffer.v"><code>output_buffer.v</code></a> → output staging  
 
 Buffers ensure:
-- controlled data injection  
-- synchronization of operands  
+- synchronized operand delivery  
 - separation of memory and compute  
+- deterministic execution timing  
 
 ---
 
-### 🔗 Why This Combination Matters
+### 🔗 Key Insight
 
-The key idea is not just using a systolic array —  
-it is **controlling when and how data enters the array**.
+> Computation flows through the array, while execution is precisely controlled around it.
 
-- The systolic array defines **how computation propagates**  
-- The buffers and control logic define **when computation happens**  
-
-👉 This results in:
-
-- predictable execution timing  
-- structured and synchronized computation  
-- scalable tile-based execution  
+This separation enables both:
+- efficiency (systolic compute)  
+- control (buffer + tile scheduling)  
 
 ---
 
-### ⚙️ Final Insight
+## 🌊 Dataflow
 
-> **Computation is data-driven (systolic), while execution is control-driven (buffers + tiles).**
+- activations → horizontal propagation  
+- weights → vertical propagation  
+- aligned data → MAC execution  
+- partial sums → accumulated across tiles  
 
-This separation enables both high efficiency and controlled execution without tightly coupling memory and compute.
-
----
-
-## 🌊 <i>Dataflow and Execution</i>
-
-- Activations move across rows  
-- Weights move across columns  
-- MAC operations occur when aligned  
-- Partial sums accumulate across tile steps  
-
-This creates a coordinated execution flow rather than independent operations.
+Result: a **fully coordinated execution stream**.
 
 ---
 
-## ⚙️ <i>Core RTL Modules</i>
+## ⚙️ Core RTL Modules
 
-### 🧩 Compute Fabric
+### 🧩 Compute
 
-- <a href="pe_unit.v"><code>pe_unit.v</code></a>  
-- <a href="pe_array_4x4.v"><code>pe_array_4x4.v</code></a>  
-- <a href="mac_unit.v"><code>mac_unit.v</code></a>  
+- <a href="pe_unit.v"><code>pe_unit.v</code></a> → single processing element performing MAC and data forwarding  
+- <a href="pe_array_4x4.v"><code>pe_array_4x4.v</code></a> → 4×4 systolic array enabling parallel MAC execution  
+- <a href="mac_unit.v"><code>mac_unit.v</code></a> → fixed-point multiply–accumulate engine  
 
 ---
 
 ### 🧠 Post-Processing
 
-- <a href="quant_bias_relu.v"><code>quant_bias_relu.v</code></a>  
-- <a href="relu_unit.v"><code>relu_unit.v</code></a>  
-- <a href="postprocess_array.v"><code>postprocess_array.v</code></a>  
+- <a href="quant_bias_relu.v"><code>quant_bias_relu.v</code></a> → requantization, bias addition, and activation  
+- <a href="relu_unit.v"><code>relu_unit.v</code></a> → standalone ReLU activation  
+- <a href="postprocess_array.v"><code>postprocess_array.v</code></a> → parallel post-processing across output tile  
 
 ---
 
 ### 🗂️ Buffers
 
-- <a href="input_buffer.v"><code>input_buffer.v</code></a>  
-- <a href="weight_buffer.v"><code>weight_buffer.v</code></a>  
-- <a href="psum_buffer.v"><code>psum_buffer.v</code></a>  
-- <a href="output_buffer.v"><code>output_buffer.v</code></a>  
+- <a href="input_buffer.v"><code>input_buffer.v</code></a> → schedules activations into the PE array  
+- <a href="weight_buffer.v"><code>weight_buffer.v</code></a> → streams weights column-wise into compute  
+- <a href="psum_buffer.v"><code>psum_buffer.v</code></a> → stores and restores partial sums across tiles  
+- <a href="output_buffer.v"><code>output_buffer.v</code></a> → captures final outputs per tile  
 
 ---
 
 ### 🎛️ Control
 
-- <a href="tile_controller.v"><code>tile_controller.v</code></a>  
-- <a href="tile_addr_gen.v"><code>tile_addr_gen.v</code></a>  
-- <a href="nnia_perf_counters.v"><code>nnia_perf_counters.v</code></a>  
+- <a href="tile_controller.v"><code>tile_controller.v</code></a> → orchestrates tile execution and sequencing  
+- <a href="tile_addr_gen.v"><code>tile_addr_gen.v</code></a> → generates tile traversal addresses  
+- <a href="nnia_perf_counters.v"><code>nnia_perf_counters.v</code></a> → tracks execution events for performance observation  
 
 ---
 
 ### 🔗 Integration
 
-- <a href="top_nnia.v"><code>top_nnia.v</code></a> — full pipeline  
+- <a href="top_nnia.v"><code>top_nnia.v</code></a> → integrates all modules into the full inference pipeline  
 
 ---
 
-## 🔄 <i>Execution Pipeline</i>
+## 🔄 Execution Pipeline
 
 Input (.mem)  
 ↓  
@@ -164,72 +160,56 @@ postprocess_array
 ↓  
 output_buffer  
 ↓  
-final output assembly  
+final output  
 
 ---
 
+## 🧪 Verification Flow
 
+RTL correctness is validated against a Python-based golden reference.
 
-## 🧪 <i>Verification & Golden Model Alignment</i>
+### Flow
 
-NNIA RTL is verified against a Python-based golden reference model to ensure functional correctness across the complete inference pipeline.
+Python → Golden Model → `.mem` → RTL → Compare → PASS  
 
-The verification flow uses deterministic input generation, tile-aware reference computation, and strict output comparison between software and hardware results.
-
----
-
-### 🧠 <i>Python Verification Modules</i>
-
-- <a href="../python/shared/fixed_point_utils.py"><code>shared/fixed_point_utils.py</code></a>  
-- <a href="../python/cores/generate_data.py"><code>cores/generate_data.py</code></a>  
-- <a href="../python/cores/tile_golden_model.py"><code>cores/tile_golden_model.py</code></a>  
-- <a href="../python/shared/compare_output.py"><code>shared/compare_output.py</code></a>  
+👉 <a href="../python/shared/compare_output.py"><b>View comparison logic</b></a>
 
 ---
 
-### 🔄 <i>Verification Execution Flow</i>
+### 🧠 Verification Modules
 
-Python → Golden Model → .mem → RTL Simulation → Compare → PASS  
+- <a href="../python/shared/fixed_point_utils.py"><code>shared/fixed_point_utils.py</code></a> → fixed-point conversion utilities  
+- <a href="../python/cores/generate_data.py"><code>cores/generate_data.py</code></a> → input and reference data generation  
+- <a href="../python/cores/tile_golden_model.py"><code>cores/tile_golden_model.py</code></a> → tile-aware golden inference model  
+- <a href="../python/shared/compare_output.py"><code>shared/compare_output.py</code></a> → RTL vs reference output comparison  
+---
 
-👉 <a href="../python/shared/compare_output.py"><b>View Comparison Logic</b></a>  
+## 📊 Validation
+
+### 🏗️ Hardware Analysis
+
+- 🏗️ <a href="../results/vivado_results/nnia_rtl_architecture.png"><b>RTL Architecture</b></a>  
+- 🌊 <a href="../results/vivado_results/nnia_full_rtl_waveform.png"><b>Waveform</b></a>  
+- 📦 <a href="../results/vivado_results/nnia_resource_utilization.png"><b>Utilization</b></a>  
+- ⏱️ <a href="../results/vivado_results/nnia_timing_summary.png"><b>Timing</b></a>  
+- ⚡ <a href="mac_unit.v"><b>MAC Engine</b></a>  
 
 ---
 
-## 📊 <i>Validation & Results</i>
+### 🧪 Functional Verification
 
-The following artifacts validate both the functional correctness and hardware behavior of the NNIA RTL pipeline after verification against the Python golden model.
-
----
-
-### 🧠 <i>Hardware & RTL Analysis</i>
-
-- 🏗️ <a href="../results/vivado_results/nnia_rtl_architecture.png"><b>RTL Architecture View</b></a>  
-- 🌊 <a href="../results/vivado_results/nnia_full_rtl_waveform.png"><b>Simulation Waveform</b></a>  
-- 📦 <a href="../results/vivado_results/nnia_resource_utilization.png"><b>Resource Utilization</b></a>  
-- ⏱️ <a href="../results/vivado_results/nnia_timing_summary.png"><b>Timing Summary</b></a>  
-- ⚡ <a href="mac_unit.v"><b>MAC Compute Engine (Fixed-Point Multiply–Accumulate)</b></a>
+- ✅ <a href="../results/python_results/nnia_rtl_vs_golden_comparison_result_pass.png"><b>RTL vs Golden (PASS)</b></a>  
 
 ---
 
-### 🧪 <i>Functional Verification</i>
+### 🔗 Full Results
 
-- ✅ <a href="../results/python_results/nnia_rtl_vs_golden_comparison_result_pass.png"><b>RTL vs Golden Model (PASS)</b></a>  
-
----
-
-### 🔗 <i>Complete Results</i>
-
-📁 <a href="../results/"><b>View Full Results Directory</b></a>  
+📁 <a href="../results/"><b>View all results</b></a>  
 
 ---
 
-## ✨ <i>Design Summary</i>
+<div align="center">
 
-NNIA RTL implements a structured inference accelerator where:
+### ✨ Hybrid systolic compute with controlled dataflow — enabling structured, scalable neural inference in hardware
 
-- computation is localized within a systolic array  
-- data movement is explicitly controlled via buffers  
-- execution is coordinated through tile-based control  
-- verification is aligned with a software reference  
-
-This results in a **balanced, scalable, and deterministic hardware inference design**.
+</div>
