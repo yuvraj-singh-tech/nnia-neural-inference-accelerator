@@ -107,20 +107,6 @@ This creates a coordinated execution flow rather than independent operations.
 
 ---
 
-## 🧠 <i>Buffer-Oriented Data Movement</i>
-
-- <a href="input_buffer.v"><code>input_buffer.v</code></a>  
-- <a href="weight_buffer.v"><code>weight_buffer.v</code></a>  
-- <a href="psum_buffer.v"><code>psum_buffer.v</code></a>  
-- <a href="output_buffer.v"><code>output_buffer.v</code></a>  
-
-Buffers provide:
-- memory–compute decoupling  
-- controlled execution timing  
-- reusable data staging  
-
----
-
 ## ⚙️ <i>Core RTL Modules</i>
 
 ### 🧩 Compute Fabric
