@@ -7,7 +7,7 @@
 ---
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/919fe548-f83f-4118-948a-eca1c2c87eb0" alt="NNIA Hero Image" width="100%">
+  <img src="https://github.com/user-attachments/assets/919fe548-f83f-4118-948a-eca1c2c87eb0" alt="NNIA Hero Image" width="77%">
 </p>
 
 
@@ -28,7 +28,7 @@ NNIA combines a systolic array compute fabric with explicit memory buffering and
 The architecture integrates dedicated input, weight, partial-sum (PSUM), and output buffers to improve data reuse and execution efficiency. A tile controller and address generator coordinate tiled execution across the compute array, enabling scalable and organized inference scheduling.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/1a97ac26-f121-4100-8d21-2f3a24ae9e41" alt="NNIA Architecture" width="100%">
+  <img src="https://github.com/user-attachments/assets/1a97ac26-f121-4100-8d21-2f3a24ae9e41" alt="NNIA Architecture" width="77%">
 </p>
 
 <p align="center">
