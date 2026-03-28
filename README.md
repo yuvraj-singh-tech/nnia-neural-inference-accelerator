@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚙️ NNIA – Neural Network Inference Accelerator  
+# ⚡ NNIA – Neural Network Inference Accelerator  
 
 <h3 align="center"><i>A Custom AI Inference Accelerator with a Hybrid Tiled Systolic Array Architecture</i></h3>
 
