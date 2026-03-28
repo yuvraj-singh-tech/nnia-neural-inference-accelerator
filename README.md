@@ -1,34 +1,55 @@
-<h1 align="center"><b>NNIA – Neural Network Inference Accelerator</b></h1>
+<div align="center">
+
+# ⚙️ NNIA – Neural Network Inference Accelerator  
 
 <h3 align="center"><i>A Custom AI Inference Accelerator with a Hybrid Tiled Systolic Array Architecture</i></h3>
 
 <p align="center"><i>Hardware–Software Co-Designed | RTL-Verified Against Python Golden Model | Multi-Layer MLP Inference for OTT Recommendation</i></p>
 
----
+<br>
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/919fe548-f83f-4118-948a-eca1c2c87eb0" alt="NNIA Hero Image" width="77%">
-</p>
+<img src="https://github.com/user-attachments/assets/919fe548-f83f-4118-948a-eca1c2c87eb0" width="80%">
 
+</div>
 
 ---
 
 ## ✨ <i>Overview</i>
 
-NNIA is a custom-designed AI inference accelerator that executes neural network models using fixed-point arithmetic in a fully RTL-based hardware pipeline. The design adopts a hybrid tiled systolic array architecture to enable efficient parallel computation and structured data reuse.
+NNIA is a custom-designed AI inference accelerator that executes neural network models through a **fully RTL-based hardware pipeline** using fixed-point arithmetic.
 
-The project spans the complete inference stack, including Python-based model preparation, quantization, memory generation, and RTL simulation, with outputs verified against a Python golden reference model. It supports structured multi-layer neural network inference and is demonstrated through an OTT-style movie recommendation pipeline.
+It combines structured dataflow, parallel compute, and controlled execution to deliver **deterministic and scalable neural inference**.
+
+The project spans the complete inference stack:
+
+- 🧠 model preparation and training (Python)  
+- 🔢 quantization and memory generation  
+- ⚙️ RTL-based execution  
+- 🧪 verification against a Python golden reference  
+
+It supports **multi-layer neural network inference** and is demonstrated using an **OTT-style recommendation pipeline**.
 
 ---
 
 ## 🧠 <i>Architecture Overview</i>
 
-NNIA combines a systolic array compute fabric with explicit memory buffering and tile-based control. Activations propagate left-to-right across the processing elements, while weights stream top-to-bottom, forming a structured systolic dataflow for dense inference workloads.
+NNIA combines a systolic compute fabric with explicit buffering and tile-based control to form a **coordinated inference pipeline**.
 
-The architecture integrates dedicated input, weight, partial-sum (PSUM), and output buffers to improve data reuse and execution efficiency. A tile controller and address generator coordinate tiled execution across the compute array, enabling scalable and organized inference scheduling.
+- activations propagate left-to-right across the PE array  
+- weights stream top-to-bottom across columns  
+- computation occurs on alignment  
+- partial sums accumulate across tile steps  
+
+The architecture integrates:
+
+- dedicated input, weight, PSUM, and output buffers  
+- tile controller and address generator  
+- structured systolic PE array  
+
+This enables efficient data reuse, synchronized execution, and scalable inference scheduling.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/1a97ac26-f121-4100-8d21-2f3a24ae9e41" alt="NNIA Architecture" width="77%">
+  <img src="https://github.com/user-attachments/assets/1a97ac26-f121-4100-8d21-2f3a24ae9e41" width="80%">
 </p>
 
 <p align="center">
@@ -39,28 +60,40 @@ The architecture integrates dedicated input, weight, partial-sum (PSUM), and out
 
 ## ⚙️ <i>Key Design Features</i>
 
-- Custom RTL-based AI inference accelerator design  
-- Hybrid tiled systolic array architecture for parallel computation  
-- 4×4 Processing Element (PE) array with structured dataflow  
-- Dedicated input, weight, PSUM, and output buffering for efficient data reuse  
-- Supports multi-layer neural network inference with structured layer-wise execution  
-- End-to-end hardware–software co-design across Python and RTL domains  
-- Demonstrated using an OTT-style movie recommendation pipeline  
+- custom RTL-based AI inference accelerator  
+- hybrid tiled systolic array for parallel computation  
+- 4×4 PE array with structured dataflow  
+- explicit input, weight, PSUM, and output buffering  
+- tile-based execution for controlled scheduling  
+- multi-layer neural inference support  
+- end-to-end hardware–software co-design  
+- demonstrated using OTT-style recommendation pipeline  
 
 ---
 
 ## 🔄 <i>Execution Flow & Documentation</i>
 
-The detailed execution flow, model preparation pipeline, quantization path, memory generation, and OTT inference setup are documented separately for clarity.
+NNIA is organized into two tightly connected flows:
 
-- 📽️ <a href="python/README.md"><b> OTT Recommendation Flow</b></a> 🍿
-- ⚙️ <a href="rtl/README.md"><b>RTL Execution, Dataflow & Hardware Design</b></a> 🔧
+<div align="center">
+
+| Flow | Description |
+|------|------------|
+| 🧠 Python Flow | data, training, quantization, memory generation |
+| ⚙️ RTL Flow | hardware execution, dataflow, buffering, control |
+
+</div>
+
+### 🔗 Documentation
+
+- 📽️ <a href="python/README.md"><b>OTT Recommendation Flow</b></a> 🍿  
+- ⚙️ <a href="rtl/README.md"><b>RTL Execution, Dataflow & Hardware Design</b></a> 🔧  
 
 ---
 
 ## 📊 <i>Results & Verification</i>
 
-NNIA has been validated through both software-side and hardware-side verification. The repository includes model evaluation artifacts, RTL-vs-golden comparison outputs, and Vivado synthesis/timing summaries.
+NNIA is validated across both software and hardware domains to ensure correctness and alignment.
 
 ### 🔹 <i>Python Results</i>
 
@@ -85,8 +118,8 @@ NNIA has been validated through both software-side and hardware-side verificatio
 ## 📁 <i>Repository Structure</i>
 
 ```text
-rtl/        → Hardware modules (PE array, buffers, controller, etc.)
-python/     → Model pipeline, quantization, data generation, OTT flow
-tb/         → Testbenches for RTL verification
-scripts/    → Automation scripts (Vivado TCL, flow control)
-results/    → Python and Vivado outputs, reports, and screenshots
+rtl/        → compute fabric, buffers, control, integration
+python/     → model pipeline, quantization, OTT flow
+tb/         → verification testbenches
+scripts/    → automation and Vivado execution
+results/    → outputs, reports, and validation artifacts
