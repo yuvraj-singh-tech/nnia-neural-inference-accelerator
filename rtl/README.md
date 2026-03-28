@@ -207,6 +207,7 @@ The following artifacts validate both the functional correctness and hardware be
 - 🌊 <a href="../results/vivado_results/nnia_full_rtl_waveform.png"><b>Simulation Waveform</b></a>  
 - 📦 <a href="../results/vivado_results/nnia_resource_utilization.png"><b>Resource Utilization</b></a>  
 - ⏱️ <a href="../results/vivado_results/nnia_timing_summary.png"><b>Timing Summary</b></a>  
+- ⚡ <a href="mac_unit.v"><b>MAC Compute Engine (Fixed-Point Multiply–Accumulate)</b></a>
 
 ---
 
