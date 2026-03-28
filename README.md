@@ -53,8 +53,8 @@ The architecture integrates dedicated input, weight, partial-sum (PSUM), and out
 
 The detailed execution flow, model preparation pipeline, quantization path, memory generation, and OTT inference setup are documented separately for clarity.
 
-- 🐍 <a href="python/README.md"><b>Python Pipeline & OTT Recommendation Flow</b></a>  
-- 🔧 <a href="rtl/README.md"><b>RTL Execution, Dataflow & Hardware Design</b></a>  
+- 📽️ <a href="python/README.md"><b> OTT Recommendation Flow</b></a> 🍿
+- ⚙️ <a href="rtl/README.md"><b>RTL Execution, Dataflow & Hardware Design</b></a> 🔧
 
 ---
 
