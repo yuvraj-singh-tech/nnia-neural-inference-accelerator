@@ -174,4 +174,4 @@ This pipeline runs **sequential multi-layer inference** on the same hardware.
 
 ### 🔥 From model to hardware to recommendation — NNIA closes the loop with real multi-layer AI inference
 
-</div>>
+</div>
