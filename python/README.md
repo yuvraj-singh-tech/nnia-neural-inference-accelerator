@@ -17,7 +17,7 @@
 
 </div>
 
----
+<br>
 
 ## ⚡ What This Represents
 
@@ -46,9 +46,13 @@ It uses the **MovieLens dataset** to model realistic OTT user behavior.
 
 ### How it flows through the system
 
-- `create_dataset.py` → converts MovieLens data into structured samples  
-- `feature_encoder.py` → maps behavior into a fixed 16-feature vector  
-- `train_mlp.py` → learns patterns from real user interactions  
+📦 [`create_dataset.py`](./ott_recommender/create_dataset.py)  
+&nbsp;&nbsp;&nbsp;&nbsp;
+⬇️  
+🧾 [`feature_encoder.py`](./ott_recommender/feature_encoder.py)  
+&nbsp;&nbsp;&nbsp;&nbsp;
+⬇️  
+🧠 [`train_mlp.py`](./ott_recommender/train_mlp.py)
 
 ### Why this matters
 
@@ -73,11 +77,18 @@ This pipeline runs **sequential multi-layer inference** on the same hardware.
 - Layer 2 → generates final output  
 - same NNIA hardware executes both  
 
+This system predicts whether a user will like a movie  
+(<b>Recommended</b> / <b>Not Recommended</b>) based on past behavior.
+
 ### What NNIA demonstrates
 - ♻️ hardware reuse across layers  
 - 🔢 stable fixed-point execution  
 - ⚙️ controlled layer scheduling  
 - 🚀 scalable inference structure  
+
+NNIA executes the same model that was trained in Python, demonstrating true <b>hardware–software alignment</b>.
+
+💡 The same NNIA hardware is reused across multiple layers, proving scalability without architectural changes.
 
 ---
 
@@ -108,7 +119,7 @@ This pipeline runs **sequential multi-layer inference** on the same hardware.
 
 ### 🎛️ Controller
 
-#### [`ott_runner.py`](./ott_runner.py)
+[`ott_runner.py`](./ott_recommender/ott_runner.py)
 
 - drives the full pipeline  
 - integrates Python and Vivado  
@@ -118,23 +129,23 @@ This pipeline runs **sequential multi-layer inference** on the same hardware.
 
 ### 📦 Data Layer
 
-- [`create_dataset.py`](./create_dataset.py) → dataset generation  
-- [`feature_encoder.py`](./feature_encoder.py) → feature definition  
+- [`create_dataset.py`](./ott_recommender/create_dataset.py) → dataset generation  
+- [`feature_encoder.py`](./ott_recommender/feature_encoder.py) → feature definition  
 
 ---
 
 ### 🧠 Model Layer
 
-- [`train_mlp.py`](./train_mlp.py) → model training  
-- [`export_quantized_model.py`](./export_quantized_model.py) → fixed-point conversion  
+- [`train_mlp.py`](./ott_recommender/train_mlp.py) → model training  
+- [`export_quantized_model.py`](./ott_recommender/export_quantized_model.py) → fixed-point conversion  
 
 ---
 
 ### 🧩 Hardware Prep
 
-- [`prepare_layer1_mem.py`](./prepare_layer1_mem.py) → Layer 1 memory  
-- [`prepare_layer2_mem.py`](./prepare_layer2_mem.py) → Layer 2 memory  
-- [`mlp_inference_reference.py`](./mlp_inference_reference.py) → reference path  
+- [`prepare_layer1_mem.py`](./ott_recommender/prepare_layer1_mem.py) → Layer 1 memory  
+- [`prepare_layer2_mem.py`](./ott_recommender/prepare_layer2_mem.py) → Layer 2 memory  
+- [`mlp_inference_reference.py`](./ott_recommender/mlp_inference_reference.py) → reference path  
 
 ---
 
@@ -147,11 +158,11 @@ This pipeline runs **sequential multi-layer inference** on the same hardware.
 
 ### 🎬 Output Layer
 
-- [`mlp_output_analyzer.py`](./mlp_output_analyzer.py) → recommendation output  
+- [`mlp_output_analyzer.py`](./ott_recommender/mlp_output_analyzer.py) → recommendation output  
 
 ---
 
-## ⚙️ System Split
+## ⚙️ Hardware–Software Co-Design
 
 **Software**
 - prepares data  
