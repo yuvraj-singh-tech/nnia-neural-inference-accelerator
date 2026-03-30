@@ -17,11 +17,11 @@
 
 </div>
 
----
+<br>
 
 ## ⚡ What This Design Achieves
 
-This RTL design forms the **core compute engine of NNIA**.
+This RTL forms the **compute backbone of NNIA**, executing neural inference through a hybrid systolic–buffered architecture.
 
 It enables:
 - ⚙️ structured parallel computation  
@@ -41,6 +41,8 @@ The design is built around three tightly integrated components:
 
 Together, they create a **coordinated inference pipeline** where data and compute are aligned.
 
+💡 Think of NNIA as a **systolic compute core wrapped with explicit data orchestration**.
+
 ---
 
 ## ⚡ Why Hybrid Architecture
@@ -54,11 +56,11 @@ NNIA combines two key ideas:
 
 ### 🧠 Systolic Compute Fabric
 
-👉 <a href="pe_array_4x4.v"><code>pe_array_4x4.v</code></a>
+[`pe_array_4x4.v`](./pe_array_4x4.v)
 
 - activations flow across rows  
 - weights flow across columns  
-- MAC operations occur on alignment  
+- MAC operations occur when activations and weights align in the array  
 - partial sums accumulate locally  
 
 This provides:
@@ -66,19 +68,23 @@ This provides:
 - structured propagation  
 - efficient data reuse  
 
+This design maximizes data reuse by streaming activations and weights once while reusing them across multiple MAC operations within the array.
+
 ---
 
 ### 🗂️ Buffer-Controlled Dataflow
 
-- <a href="input_buffer.v"><code>input_buffer.v</code></a> → activation staging  
-- <a href="weight_buffer.v"><code>weight_buffer.v</code></a> → weight staging  
-- <a href="psum_buffer.v"><code>psum_buffer.v</code></a> → accumulation storage  
-- <a href="output_buffer.v"><code>output_buffer.v</code></a> → output staging  
+- [`input_buffer.v`](./input_buffer.v) → activation staging  
+- [`weight_buffer.v`](./weight_buffer.v) → weight staging  
+- [`psum_buffer.v`](./psum_buffer.v) → accumulation storage  
+- [`output_buffer.v`](./output_buffer.v) → output staging  
 
 Buffers ensure:
 - synchronized operand delivery  
 - separation of memory and compute  
 - deterministic execution timing  
+
+The buffered, tile-driven execution ensures deterministic timing independent of data values.
 
 ---
 
@@ -92,7 +98,7 @@ This separation enables both:
 
 ---
 
-## 🌊 Dataflow
+## 🌊 Systolic Dataflow
 
 - activations → horizontal propagation  
 - weights → vertical propagation  
@@ -107,40 +113,40 @@ Result: a **fully coordinated execution stream**.
 
 ### 🧩 Compute
 
-- <a href="pe_unit.v"><code>pe_unit.v</code></a> → single processing element performing MAC and data forwarding  
-- <a href="pe_array_4x4.v"><code>pe_array_4x4.v</code></a> → 4×4 systolic array enabling parallel MAC execution  
-- <a href="mac_unit.v"><code>mac_unit.v</code></a> → fixed-point multiply–accumulate engine  
+- [`pe_unit.v`](./pe_unit.v) → single processing element performing MAC and data forwarding  
+- [`pe_array_4x4.v`](./pe_array_4x4.v) → 4×4 systolic array enabling parallel MAC execution  
+- [`mac_unit.v`](./mac_unit.v) → fixed-point multiply–accumulate engine  
 
 ---
 
 ### 🧠 Post-Processing
 
-- <a href="quant_bias_relu.v"><code>quant_bias_relu.v</code></a> → requantization, bias addition, and activation  
-- <a href="relu_unit.v"><code>relu_unit.v</code></a> → standalone ReLU activation  
-- <a href="postprocess_array.v"><code>postprocess_array.v</code></a> → parallel post-processing across output tile  
+- [`quant_bias_relu.v`](./quant_bias_relu.v) → requantization, bias addition, and activation  
+- [`relu_unit.v`](./relu_unit.v) → standalone ReLU activation  
+- [`postprocess_array.v`](./postprocess_array.v) → parallel post-processing across output tile  
 
 ---
 
 ### 🗂️ Buffers
 
-- <a href="input_buffer.v"><code>input_buffer.v</code></a> → schedules activations into the PE array  
-- <a href="weight_buffer.v"><code>weight_buffer.v</code></a> → streams weights column-wise into compute  
-- <a href="psum_buffer.v"><code>psum_buffer.v</code></a> → stores and restores partial sums across tiles  
-- <a href="output_buffer.v"><code>output_buffer.v</code></a> → captures final outputs per tile  
+- [`input_buffer.v`](./input_buffer.v) → schedules activations into the PE array  
+- [`weight_buffer.v`](./weight_buffer.v) → streams weights column-wise into compute  
+- [`psum_buffer.v`](./psum_buffer.v) → stores and restores partial sums across tiles  
+- [`output_buffer.v`](./output_buffer.v) → captures final outputs per tile  
 
 ---
 
 ### 🎛️ Control
 
-- <a href="tile_controller.v"><code>tile_controller.v</code></a> → orchestrates tile execution and sequencing  
-- <a href="tile_addr_gen.v"><code>tile_addr_gen.v</code></a> → generates tile traversal addresses  
-- <a href="nnia_perf_counters.v"><code>nnia_perf_counters.v</code></a> → tracks execution events for performance observation  
+- [`tile_controller.v`](./tile_controller.v) → orchestrates tile execution and sequencing  
+- [`tile_addr_gen.v`](./tile_addr_gen.v) → generates tile traversal addresses  
+- [`nnia_perf_counters.v`](./nnia_perf_counters.v) → tracks execution events for performance observation  
 
 ---
 
 ### 🔗 Integration
 
-- <a href="top_nnia.v"><code>top_nnia.v</code></a> → integrates all modules into the full inference pipeline  
+- [`top_nnia.v`](./top_nnia.v) → integrates all modules into the full inference pipeline  
 
 ---
 
@@ -148,9 +154,7 @@ Result: a **fully coordinated execution stream**.
 
 Input (.mem)  
 ↓  
-input_buffer  
-↓  
-weight_buffer  
+input_buffer → weight_buffer  
 ↓  
 pe_array_4x4  
 ↓  
@@ -172,39 +176,42 @@ RTL correctness is validated against a Python-based golden reference.
 
 Python → Golden Model → `.mem` → RTL → Compare → PASS  
 
-👉 <a href="../python/shared/compare_output.py"><b>View comparison logic</b></a>
+This guarantees **bit-accurate alignment between software and hardware execution**.
+
+👉 [`View comparison logic`](../python/shared/compare_output.py)
 
 ---
 
 ### 🧠 Verification Modules
 
-- <a href="../python/shared/fixed_point_utils.py"><code>shared/fixed_point_utils.py</code></a> → fixed-point conversion utilities  
-- <a href="../python/cores/generate_data.py"><code>cores/generate_data.py</code></a> → input and reference data generation  
-- <a href="../python/cores/tile_golden_model.py"><code>cores/tile_golden_model.py</code></a> → tile-aware golden inference model  
-- <a href="../python/shared/compare_output.py"><code>shared/compare_output.py</code></a> → RTL vs reference output comparison  
+- [`shared/fixed_point_utils.py`](../python/shared/fixed_point_utils.py) → fixed-point conversion utilities  
+- [`cores/generate_data.py`](../python/cores/generate_data.py) → input and reference data generation  
+- [`cores/tile_golden_model.py`](../python/cores/tile_golden_model.py) → tile-aware golden inference model  
+- [`shared/compare_output.py`](../python/shared/compare_output.py) → RTL vs reference output comparison  
+
 ---
 
 ## 📊 Validation
 
 ### 🏗️ Hardware Analysis
 
-- 🏗️ <a href="../results/vivado_results/nnia_rtl_architecture.png"><b>RTL Architecture</b></a>  
-- 🌊 <a href="../results/vivado_results/nnia_full_rtl_waveform.png"><b>Waveform</b></a>  
-- 📦 <a href="../results/vivado_results/nnia_resource_utilization.png"><b>Utilization</b></a>  
-- ⏱️ <a href="../results/vivado_results/nnia_timing_summary.png"><b>Timing</b></a>  
-- ⚡ <a href="mac_unit.v"><b>MAC Engine</b></a>  
+- 🏗️ [`RTL Architecture`](../results/vivado_results/nnia_rtl_architecture.png)  
+- 🌊 [`Waveform`](../results/vivado_results/nnia_full_rtl_waveform.png)  
+- 📦 [`Utilization`](../results/vivado_results/nnia_resource_utilization.png)  
+- ⏱️ [`Timing`](../results/vivado_results/nnia_timing_summary.png)  
+- ⚡ [`MAC Engine`](./mac_unit.v)  
 
 ---
 
 ### 🧪 Functional Verification
 
-- ✅ <a href="../results/python_results/nnia_rtl_vs_golden_comparison_result_pass.png"><b>RTL vs Golden (PASS)</b></a>  
+- ✅ [`RTL vs Golden (PASS)`](../results/python_results/nnia_rtl_vs_golden_comparison_result_pass.png)  
 
 ---
 
 ### 🔗 Full Results
 
-📁 <a href="../results/"><b>View all results</b></a>  
+📁 [`View all results`](../results/)  
 
 ---
 
@@ -212,8 +219,14 @@ Python → Golden Model → `.mem` → RTL → Compare → PASS
 
 - Synthesized on Artix-7 FPGA (Vivado 2022.1) with a 100 MHz timing constraint  
 - Achieved positive slack of +3.7 ns, indicating timing closure with headroom (~150+ MHz estimated)
-  
+
 ---
+
+This architecture demonstrates how structured hardware design can efficiently map neural workloads with predictable performance and scalable parallelism.
+
+---
+
+<div align="center">
 
 ### ✨ Hybrid systolic compute with controlled dataflow — enabling structured, scalable neural inference in hardware
 
