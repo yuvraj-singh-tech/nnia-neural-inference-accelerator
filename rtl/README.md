@@ -191,21 +191,85 @@ This guarantees **bit-accurate alignment between software and hardware execution
 
 ---
 
-## 📊 Validation
+<br>
 
-### 🏗️ Hardware Analysis
+<h2 align="center">📊 Validation & Hardware Analysis</h2>
 
-- 🏗️ [`RTL Architecture`](../results/vivado_results/nnia_rtl_architecture.png)  
-- 🌊 [`Waveform`](../results/vivado_results/nnia_full_rtl_waveform.png)  
-- 📦 [`Utilization`](../results/vivado_results/nnia_resource_utilization.png)  
-- ⏱️ [`Timing`](../results/vivado_results/nnia_timing_summary.png)  
-- ⚡ [`MAC Engine`](./mac_unit.v)  
+<p align="center">
+The NNIA RTL is validated through synthesis, simulation, and golden-model comparison — 
+ensuring <b>correctness</b>, <b>timing reliability</b>, and <b>hardware integrity</b>.
+</p>
 
----
+<br>
 
-### 🧪 Functional Verification
+<div align="center">
 
-- ✅ [`RTL vs Golden (PASS)`](../results/python_results/nnia_rtl_vs_golden_comparison_result_pass.png)  
+<table>
+<tr>
+
+<td align="center" width="25%">
+
+<b>🏗️ Architecture</b><br><br>
+RTL structural view of the NNIA pipeline<br><br>
+<a href="../results/vivado_results/nnia_rtl_architecture.png">View</a>
+
+</td>
+
+<td align="center" width="25%">
+
+<b>🌊 Waveform</b><br><br>
+End-to-end simulation waveform of inference execution<br><br>
+<a href="../results/vivado_results/nnia_full_rtl_waveform.png">View</a>
+
+</td>
+
+<td align="center" width="25%">
+
+<b>📦 Utilization</b><br><br>
+FPGA resource usage (LUTs, FFs, DSPs)<br><br>
+<a href="../results/vivado_results/nnia_resource_utilization.png">View</a>
+
+</td>
+
+<td align="center" width="25%">
+
+<b>⏱️ Timing</b><br><br>
+Timing closure report and slack analysis<br><br>
+<a href="../results/vivado_results/nnia_timing_summary.png">View</a>
+
+</td>
+
+</tr>
+</table>
+
+</div>
+
+<br>
+
+<div align="center">
+
+<table>
+<tr>
+
+<td align="center" width="100%">
+
+<b>🧪 Functional Verification</b><br><br>
+Cycle-accurate RTL output validated against Python golden model<br><br>
+<a href="../results/python_results/nnia_rtl_vs_golden_comparison_result_pass.png">View PASS Result</a>
+
+</td>
+
+</tr>
+</table>
+
+</div>
+
+<br>
+
+<p align="center">
+This confirms that NNIA achieves <b>bit-accurate hardware execution</b> 
+with reliable timing and verified functional correctness.
+</p>
 
 ---
 
