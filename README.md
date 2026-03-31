@@ -101,26 +101,52 @@ NNIA is organized into two tightly connected flows:
 
 ---
 
-## 📊 <i>Results & Verification</i>
+<br>
 
-NNIA is validated across both software and hardware domains to ensure correctness and alignment.
+<h2 align="center">📊 Results & Verification</h2>
 
-### 🔹 <i>Python Results</i>
+<p align="center">
+Validated across software and hardware to ensure <b>correctness</b>, <b>alignment</b>, and <b>reliable inference execution</b>.
+</p>
 
-- <a href="./results/python_results/nnia_model_accuracy_summary.png"><b>Model Accuracy Summary</b></a>  
-- <a href="./results/python_results/nnia_inference_performance_summary.png"><b>Inference Performance Summary</b></a>  
+<br>
 
-### 🔹 <i>RTL Verification</i>
+<div align="center">
 
-- <a href="./results/python_results/nnia_rtl_vs_golden_comparison_result_pass.png"><b>RTL vs Golden Model Comparison</b></a>  
+<table>
+<tr>
 
-### 🔹 <i>Vivado Results</i>
+<td align="center" width="33%">
 
-- <a href="./results/vivado_results/nnia_resource_utilization.png"><b>Resource Utilization Report</b></a>  
-- <a href="./results/vivado_results/nnia_timing_summary.png"><b>Timing Summary Report</b></a>  
+<b>📈 Model Performance</b><br><br>
+<a href="results/python_results/nnia_model_accuracy_summary.png">Accuracy Metrics</a>
 
-<p>
-  📁 <b>Full results folder:</b> <a href="./results/"><code>results/</code></a>
+</td>
+
+<td align="center" width="33%">
+
+<b>🧪 RTL Verification</b><br><br>
+<a href="results/python_results/nnia_rtl_vs_golden_comparison_result_pass.png">PASS Result</a>
+
+</td>
+
+<td align="center" width="33%">
+
+<b>⚙️ Hardware Analysis</b><br><br>
+<a href="results/vivado_results/nnia_resource_utilization.png">Utilization</a> · 
+<a href="results/vivado_results/nnia_timing_summary.png">Timing</a>
+
+</td>
+
+</tr>
+</table>
+
+</div>
+
+<br>
+
+<p align="center">
+Demonstrates <b>cycle-accurate hardware inference</b> aligned with the software reference.
 </p>
 
 ---
