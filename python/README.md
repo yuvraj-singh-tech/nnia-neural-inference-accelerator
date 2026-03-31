@@ -217,8 +217,8 @@ Q8.8 quantized model aligned with hardware execution<br><br>
 
 <b>🎬 Recommendation Output</b><br><br>
 Final OTT-style decisions (Recommended / Not Recommended)<br><br>
-<a href="results/python_results/nnia_watchly_strong_match_recommendation.png">Recommended</a><br>
-<a href="results/python_results/nnia_watchly_low_match_rejection.png">Not Recommended</a>
+<a href="../results/python_results/nnia_watchly_strong_match_recommendation.png">Recommended</a><br>
+<a href="../results/python_results/nnia_watchly_low_match_rejection.png">Not Recommended</a>
 
 </td>
 
