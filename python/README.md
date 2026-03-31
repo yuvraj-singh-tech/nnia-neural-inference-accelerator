@@ -181,14 +181,13 @@ NNIA executes the same model that was trained in Python, demonstrating true <b>h
 
 ---
 
-
 <br>
 
-<h2 align="center">📊 Results & Verification</h2>
+<h2 align="center">✨ Output Validation & Experience</h2>
 
 <p align="center">
-NNIA is validated through a hardware–software co-designed flow, ensuring 
-<b>functional correctness</b>, <b>numerical alignment</b>, and <b>reliable inference execution</b>.
+From model learning to final recommendation, NNIA delivers a fully integrated inference pipeline — 
+ensuring <b>model quality</b> and a <b>real-world OTT-style user experience</b>.
 </p>
 
 <br>
@@ -200,25 +199,26 @@ NNIA is validated through a hardware–software co-designed flow, ensuring
 
 <td align="center" width="33%">
 
-<b>🔬 Data Generation</b><br><br>
-Python-based input, weight, and bias generation with fixed-point reference outputs<br><br>
-<a href="results/python_results/nnia_data_generation_output.png">View Output</a>
-
-</td>
-
-<td align="center" width="33%">
-
 <b>📈 Model Performance</b><br><br>
-Training accuracy and evaluation metrics from the MLP model<br><br>
+Evaluation of the trained MLP using accuracy and F1-score metrics<br><br>
 <a href="results/python_results/nnia_model_accuracy_summary.png">View Metrics</a>
 
 </td>
 
 <td align="center" width="33%">
 
-<b>⚙️ Hardware Verification</b><br><br>
-RTL outputs validated against Python golden reference<br><br>
-<a href="results/python_results/nnia_rtl_vs_golden_comparison_result_pass.png">View Validation</a>
+<b>🔢 Fixed-Point Mapping</b><br><br>
+Q8.8 quantized model aligned with hardware execution<br><br>
+<a href="results/python_results/nnia_model_quantization_report.png">View Quantization</a>
+
+</td>
+
+<td align="center" width="33%">
+
+<b>🎬 Recommendation Output</b><br><br>
+Final OTT-style decisions (Recommended / Not Recommended)<br><br>
+<a href="results/python_results/nnia_watchly_strong_match_recommendation.png">Recommended</a><br>
+<a href="results/python_results/nnia_watchly_low_match_rejection.png">Not Recommended</a>
 
 </td>
 
@@ -230,9 +230,10 @@ RTL outputs validated against Python golden reference<br><br>
 <br>
 
 <p align="center">
-This confirms that NNIA achieves <b>cycle-accurate hardware inference</b> 
-aligned with its software reference, demonstrating a robust and verifiable AI acceleration pipeline.
+This demonstrates how NNIA translates learned intelligence into a 
+complete <b>hardware-driven AI experience</b> — bridging computation and user-facing applications.
 </p>
+
 ---
 
 ### 🔥 From model to hardware to recommendation — NNIA closes the loop with real multi-layer AI inference
