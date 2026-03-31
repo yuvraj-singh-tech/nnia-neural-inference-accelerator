@@ -181,7 +181,62 @@ NNIA executes the same model that was trained in Python, demonstrating true <b>h
 
 ---
 
+<br>
+
+<h2 align="center">✨ Output Validation & Experience</h2>
+
+<p align="center">
+From model learning to final recommendation, NNIA delivers a fully integrated inference pipeline — 
+ensuring <b>model quality</b> and a <b>real-world OTT-style user experience</b>.
+</p>
+
+<br>
+
 <div align="center">
+
+<table>
+<tr>
+
+<td align="center" width="33%">
+
+<b>📈 Model Performance</b><br><br>
+Evaluation of the trained MLP using accuracy and F1-score metrics<br><br>
+<a href="results/python_results/nnia_model_accuracy_summary.png">View Metrics</a>
+
+</td>
+
+<td align="center" width="33%">
+
+<b>🔢 Fixed-Point Mapping</b><br><br>
+Q8.8 quantized model aligned with hardware execution<br><br>
+<a href="results/python_results/nnia_model_quantization_report.png">View Quantization</a>
+
+</td>
+
+<td align="center" width="33%">
+
+<b>🎬 Recommendation Output</b><br><br>
+Final OTT-style decisions (Recommended / Not Recommended)<br><br>
+<a href="results/python_results/nnia_watchly_strong_match_recommendation.png">Recommended</a><br>
+<a href="results/python_results/nnia_watchly_low_match_rejection.png">Not Recommended</a>
+
+</td>
+
+</tr>
+</table>
+
+</div>
+
+<br>
+
+<p align="center">
+This demonstrates how NNIA translates learned intelligence into a 
+complete <b>hardware-driven AI experience</b> — bridging computation and user-facing applications.
+</p>
+
+<div align="center">
+
+---
 
 ### 🔥 From model to hardware to recommendation — NNIA closes the loop with real multi-layer AI inference
 
