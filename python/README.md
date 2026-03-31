@@ -201,7 +201,7 @@ ensuring <b>model quality</b> and a <b>real-world OTT-style user experience</b>.
 
 <b>📈 Model Performance</b><br><br>
 Evaluation of the trained MLP using accuracy and F1-score metrics<br><br>
-<a href="results/python_results/nnia_model_accuracy_summary.png">View Metrics</a>
+<a href="../results/python_results/nnia_model_accuracy_summary.png">View Metrics</a>
 
 </td>
 
@@ -209,7 +209,7 @@ Evaluation of the trained MLP using accuracy and F1-score metrics<br><br>
 
 <b>🔢 Fixed-Point Mapping</b><br><br>
 Q8.8 quantized model aligned with hardware execution<br><br>
-<a href="results/python_results/nnia_model_quantization_report.png">View Quantization</a>
+<a href="../results/python_results/nnia_model_quantization_report.png">View Quantization</a>
 
 </td>
 
