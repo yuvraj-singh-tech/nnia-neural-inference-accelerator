@@ -37,7 +37,7 @@ This project demonstrates how neural network inference can be efficiently mapped
 
 <p>
 NNIA implements a <b>systolic-style dataflow architecture</b> — 
-<i>inspired by architectures such as Google’s TPU and modern NPUs</i> — 
+<i>a well-established compute paradigm widely used in accelerators such as Google's TPU</i> — 
 adapted for efficient FPGA-based execution.
 </p>
 
